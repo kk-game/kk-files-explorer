@@ -85,6 +85,7 @@ func main() {
 	engin.StaticFile("/", "html/index.html") // 返回前端页面
 	engin.Static("/static", "./html/static") //设置静态文件地址
 	engin.GET("/files", listFiles)           // 列出目录中的文件
+	engin.GET("/read", readFile)             //读取文件
 	engin.POST("/upload", handleUpload)      // 处理文件上传
 	engin.POST("/delete", deleteFile)        //删除文件
 
@@ -273,4 +274,8 @@ func LocalIPV4() string {
 		}
 	})
 	return localIPv4Str
+}
+
+func readFile(c *gin.Context) {
+
 }

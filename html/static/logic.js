@@ -35,7 +35,7 @@ function deleteFileOrFolder(fileName, type) {
 
     fetch(`/delete`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
             path: currentDir + "/" + fileName,
             type: type, // 传递文件或文件夹类型
@@ -210,7 +210,10 @@ function loadSecretKey() {
 // 保存秘钥到本地存储
 function saveSecretKey() {
     const secretKey = document.getElementById("secret-key").value;
-    if (secretKey.indexOf("填写成功") >= 0) { return; }
+
+    if (secretKey.indexOf("填写成功") >= 0) {
+        return;
+    }
     localStorage.setItem("secretKey", secretKey);
     document.getElementById("secret-key").value = secretKey + "  填写成功"
 }
