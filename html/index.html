@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>文件管理器</title>
+    <link rel="stylesheet" type="text/css" href="./static/style.css"/>
+</head>
+
+<body>
+<div class="container">
+    <h2>📂 kk-file-explorer</h2>
+
+    <!-- 添加秘钥输入框 -->
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+        <span style="font-size: 16px; color: #333;">填写秘钥:</span>
+        <input id="secret-key" type="text" placeholder="请输入秘钥"
+               style="flex: 1; padding: 8px; margin: 0 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; width: auto;">
+        <button onclick="saveSecretKey()"
+                style="padding: 8px 12px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 14px;">
+            填写
+        </button>
+    </div>
+
+    <div class="nav-buttons">
+        <button onclick="goUp()">返回上一级</button>
+        <span id="current-path">当前路径：/</span>
+    </div>
+
+    <ul id="file-list"></ul>
+    <button id="clean-btn">清空文件</button>
+    <div id="drop-area">📥 拖拽文件或文件夹到这里</div>
+    <ul id="upload-list"></ul>
+    <button id="upload-btn">⬆️ 开始上传</button>
+    <div id="progress">
+        <div id="progress-bar"></div>
+    </div>
+    <div id="upload-status">✅ 上传完成！</div>
+</div>
+<script src="static/logic.js"></script>
+</body>
+
+</html>

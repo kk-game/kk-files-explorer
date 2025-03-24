@@ -19,7 +19,8 @@ if exist "build\file_manage" (
 go build -o build/file_manage main.go
 
 xcopy "bin\*" "build\bin\*" /Y
-xcopy "static\*" "build\static\*" /Y
+xcopy "html\*" "build\html\*" /Y
+xcopy "html\static\*" "build\html\static\*" /Y
 
 ::macos ´ò°ü±àÒë
 ::GOOS=linux GOARCH=amd64 go build -o file_manage

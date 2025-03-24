@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"kk-game-upload/src"
 	"log"
 	"net"
 	"net/http"
@@ -21,7 +22,7 @@ var maxFileSize int64 = 300
 
 var fullPathHead = ""
 var baseDir = "./uploads" // 上传文件保存的根目录
-var key_secret = "4WSFFM6IC4NPLG8KHP55B0Q70LUZBR0V"
+var keySecret = "4WSFFM6IC4NPLG8KHP55B0Q70LUZBR0V"
 
 type config struct {
 	Port       int32  `json:"port"`
@@ -61,7 +62,7 @@ func main() {
 	}
 
 	baseDir = conf.BaseDir
-	key_secret = conf.KeySecret
+	keySecret = conf.KeySecret
 	maxFileSize = conf.FileSizeMB * sizeMB
 
 	// 确保上传目录存在
@@ -79,16 +80,17 @@ func main() {
 
 	gin.SetMode(gin.ReleaseMode)
 	engin := gin.Default()
-
+	engin.Use(src.Cors())
 	// 设置路由
-	engin.StaticFile("/", "static/index.html") // 返回前端页面
-
-	engin.GET("/files", listFiles)      // 列出目录中的文件
-	engin.POST("/upload", handleUpload) // 处理文件上传
-	engin.POST("/delete", deleteFile)   //删除文件
+	engin.StaticFile("/", "html/index.html") // 返回前端页面
+	engin.Static("/static", "./html/static") //设置静态文件地址
+	engin.GET("/files", listFiles)           // 列出目录中的文件
+	engin.POST("/upload", handleUpload)      // 处理文件上传
+	engin.POST("/delete", deleteFile)        //删除文件
 
 	ipv4 := LocalIPV4()
-	fmt.Printf("服务器运行在 http://%s:%d", ipv4, conf.Port)
+	fmt.Printf("服务器运行在 htt%s://%s:%d", "p", ipv4, conf.Port)
+
 	err = engin.Run(fmt.Sprintf(":%d", conf.Port))
 	if err != nil {
 		log.Panic("启动服务器错误")
@@ -160,7 +162,7 @@ func handleUpload(c *gin.Context) {
 	files := form.File["files"]
 	paths := form.Value["paths"]
 
-	if form.Value["secretKey"][0] != key_secret {
+	if form.Value["secretKey"][0] != keySecret {
 		c.JSON(http.StatusOK, gin.H{"code": Err4, "info": "秘钥错误"})
 		return
 	}
@@ -207,7 +209,7 @@ func deleteFile(ctx *gin.Context) {
 	}
 
 	// 校验秘钥
-	if req.SecretKey != key_secret {
+	if req.SecretKey != keySecret {
 		ctx.JSON(http.StatusOK, gin.H{"code": Err10, "info": "秘钥错误"})
 		return
 	}
