@@ -2,5 +2,5 @@
     "port": 8088,
     "file_size_mb": 30000,
     "base_dir": "./uploads",
-    "secret_key": "fasdfasdfasdfasdfeqerqwerqwer"
+    "secret_key": "这里是客户端填写的秘钥, 填写秘钥才能进行操作"
 }

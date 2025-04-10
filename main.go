@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -22,7 +23,7 @@ var maxFileSize int64 = 300
 
 var fullPathHead = ""
 var baseDir = "./uploads" // 上传文件保存的根目录
-var keySecret = "4WSFFM6IC4NPLG8KHP55B0Q70LUZBR0V"
+var keySecret = "这里是验证的秘钥"
 
 type config struct {
 	Port       int32  `json:"port"`
@@ -48,6 +49,7 @@ const (
 	Err13 = 13
 	Err14 = 14
 	Err15 = 15
+	Err16 = 16
 )
 
 func main() {
@@ -84,11 +86,12 @@ func main() {
 	// 设置路由
 	engin.StaticFile("/", "html/index.html") // 返回前端页面
 	engin.Static("/static", "./html/static") //设置静态文件地址
-	engin.GET("/files", listFiles)           // 列出目录中的文件
-	engin.GET("/read", readFile)             //读取文件
-	engin.POST("/upload", handleUpload)      // 处理文件上传
-	engin.POST("/delete", deleteFile)        //删除文件
-	engin.POST("/change", changName)
+
+	engin.GET("/files", listFiles)      // 列出目录中的文件
+	engin.GET("/read", readFile)        //读取文件
+	engin.POST("/upload", handleUpload) // 处理文件上传
+	engin.POST("/delete", deleteFile)   //删除文件
+	engin.POST("/change", changName)    //修改文件名称
 
 	ipv4 := LocalIPV4()
 	fmt.Printf("服务器运行在 htt%s://%s:%d", "p", ipv4, conf.Port)
@@ -277,15 +280,16 @@ func LocalIPV4() string {
 	return localIPv4Str
 }
 
-func readFile(ctx *gin.Context) {
+func readFile(_ *gin.Context) {
 
 }
 
 func changName(ctx *gin.Context) {
 	var req struct {
-		Path      string `json:"path"`      // 相对路径
+		Path      string `json:"path"`      // 原路径（相对路径）
 		Type      string `json:"type"`      // "file" 或 "directory"
 		SecretKey string `json:"secretKey"` // 用户提交的秘钥
+		NewName   string `json:"name"`      // 新的名称
 	}
 
 	// 解析 JSON 请求体
@@ -300,44 +304,60 @@ func changName(ctx *gin.Context) {
 		return
 	}
 
-	// 构建目标路径
-	targetPath := filepath.Join(baseDir, req.Path)
+	// 3. 校验新名称（允许中文、英文、数字，不含特殊字符/空格）
+	validName := regexp.MustCompile(`^[\p{Han}a-zA-Z0-9._]+$`).MatchString
+	if !validName(req.NewName) {
+		ctx.JSON(http.StatusOK, gin.H{"code": Err16, "info": "名称只能包含中文、英文和数字"})
+		return
+	}
 
-	// 检查目标路径是否在 baseDir 范围内
-	fullPath, err := filepath.Abs(targetPath)
+	// 构建原路径和目标路径
+	oldPath := filepath.Join(baseDir, req.Path)
+	newPath := filepath.Join(filepath.Dir(oldPath), req.NewName) // 在相同目录下重命名
+
+	// 检查原路径是否在 baseDir 范围内
+	fullOldPath, err := filepath.Abs(oldPath)
 	if err != nil {
-		ctx.JSON(http.StatusOK, gin.H{"code": Err12, "info": "路径解析失败"})
+		ctx.JSON(http.StatusOK, gin.H{"code": Err12, "info": "原路径解析失败"})
 		return
 	}
 
-	fmt.Printf("实际的文件路径: %s", fullPath)
-
-	if !strings.HasPrefix(fullPath, fullPathHead) {
-		ctx.JSON(http.StatusOK, gin.H{"code": Err14, "info": "路径超出允许范围"})
+	if !strings.HasPrefix(fullOldPath, fullPathHead) {
+		ctx.JSON(http.StatusOK, gin.H{"code": Err14, "info": "原路径超出允许范围"})
 		return
 	}
 
-	// 检查路径是否存在
-	if _, err := os.Stat(targetPath); os.IsNotExist(err) {
+	// 检查目标路径是否在 baseDir 范围内（防止通过 ../ 跳出目录）
+	fullNewPath, err := filepath.Abs(newPath)
+	if err != nil {
+		ctx.JSON(http.StatusOK, gin.H{"code": Err12, "info": "新路径解析失败"})
+		return
+	}
+
+	if !strings.HasPrefix(fullNewPath, fullPathHead) {
+		ctx.JSON(http.StatusOK, gin.H{"code": Err14, "info": "新路径超出允许范围"})
+		return
+	}
+
+	// 检查原路径是否存在
+	if _, err := os.Stat(oldPath); os.IsNotExist(err) {
 		ctx.JSON(http.StatusOK, gin.H{"code": Err15, "info": "文件或文件夹不存在"})
 		return
 	}
 
-	// 执行修改名称操作
-	if req.Type == "file" {
-		err = os.Remove(targetPath) // 删除文件
-	} else if req.Type == "directory" {
-		err = os.RemoveAll(targetPath) // 删除文件夹
-	} else {
-		ctx.JSON(http.StatusOK, gin.H{"code": Err11, "info": "无效的类型参数"})
+	// 检查目标路径是否已存在
+	if _, err := os.Stat(newPath); !os.IsNotExist(err) {
+		ctx.JSON(http.StatusOK, gin.H{"code": Err8, "info": "目标名称已存在"})
 		return
 	}
 
+	// 执行重命名操作（文件和文件夹都用 os.Rename）
+	err = os.Rename(oldPath, newPath)
 	if err != nil {
-		ctx.JSON(http.StatusOK, gin.H{"code": Err13, "info": fmt.Sprintf("删除失败: %v", err)})
+		ctx.JSON(http.StatusOK, gin.H{"code": Err13, "info": fmt.Sprintf("重命名失败: %v", err)})
 		return
 	}
 
-	// 删除成功
-	ctx.JSON(http.StatusOK, gin.H{"code": ErrOK, "info": "删除成功"})
+	// 重命名成功
+	ctx.JSON(http.StatusOK, gin.H{"code": ErrOK, "info": "重命名成功"})
 }

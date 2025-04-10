@@ -28,9 +28,9 @@
         </div>
 
         <!-- 弹出框容器 -->
-        <div id="rename-modal" style="display: none;">
+        <div id="rename-modal">
             <div id="rename-container">
-                <label for="new-name">新名称:</label>
+                <label for="new-name">请输入新名称:</label>
                 <input id="new-name" type="text" placeholder="请输入新的名称" />
                 <button onclick="renameFile()" id="confirm-rename-btn">修改</button>
                 <button onclick="closeRenameModal()">取消</button>
@@ -66,12 +66,12 @@
 
             // 执行重命名操作
             const secretKey = localStorage.getItem("secretKey");
-            fetch(`/rename`, {
+            fetch(`/change`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    oldPath: currentDir + "/" + oldName,
-                    newName: newName,
+                    path: currentDir + "/" + oldName,
+                    name: newName,
                     type: fileToRename.type,  // 传递文件或文件夹类型
                     secretKey: secretKey      // 传递秘钥
                 })
@@ -83,8 +83,7 @@
                     } else {
                         alert("重命名失败: " + data.info);
                     }
-                })
-                .catch(err => console.error("重命名失败", err));
+                }).catch(err => console.error("重命名失败", err));
 
             // 关闭弹出框
             closeRenameModal();
@@ -134,34 +133,6 @@
             pathDisplay.textContent = "当前路径：" + (currentDir === "" ? "/" : currentDir + "/");
         }
 
-
-        // function changeName(fileName, type) {
-        //     const secretKey = localStorage.getItem("secretKey");
-        //     if (!secretKey) {
-        //         alert("秘钥未填写或无效！");
-        //         return;
-        //     }
-
-        //     if (!confirm(`确定要删除 ${fileName} 吗？`)) return;
-
-        //     fetch(`/change`, {
-        //         method: "POST",
-        //         headers: { "Content-Type": "application/json" },
-        //         body: JSON.stringify({
-        //             path: currentDir + "/" + fileName,
-        //             type: type, // 传递文件或文件夹类型
-        //             secretKey: secretKey // 传递秘钥
-        //         })
-        //     }).then(res => res.json())
-        //         .then(data => {
-        //             if (data.code === 0) {
-        //                 console.log("重命名成功!")
-        //                 fetchFiles(); // 重新加载文件列表
-        //             } else {
-        //                 alert("重命名失败: " + data.info);
-        //             }
-        //         }).catch(err => console.error("删除失败", err));
-        // }
 
         // 删除文件或文件夹
         function deleteFileOrFolder(fileName, type) {

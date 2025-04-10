@@ -294,7 +294,7 @@ button-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: rgba(0, 0, 0, 0.3); /* 半透明黑色背景 */
+  background: rgba(0, 0, 0, 0.8); /* 半透明黑色背景 */
   z-index: 1000; /* 保证弹窗在最上面 */
   animation: fadeIn 0.3s ease-in; /* 添加动画效果 */
   display: none; /* 初始隐藏弹窗 */
@@ -302,14 +302,16 @@ button-container {
 
 /* 弹窗容器 */
 #rename-container {
-  width: 100%;
-  max-width: 400px; /* 最大宽度 400px */
+  width: 90%; /* 在小屏幕上留点边距 */
+  max-width: 400px; /* 最大宽度限制 */
   padding: 20px;
   background: #ffffff;
-  border-radius: 10px; /* 圆角 */
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); /* 阴影效果 */
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   text-align: center;
-  animation: slideUp 0.3s ease-out; /* 弹窗从下往上滑动 */
+  animation: slideUp 0.3s ease-out;
+  margin: 0 auto; /* 水平居中（即使 flex 失效也能保证） */
+  margin-top: 100px;
 }
 
 /* 弹窗标题 */
@@ -336,7 +338,7 @@ button-container {
 /* 输入框聚焦时的样式 */
 #rename-container input:focus {
   outline: none;
-  border-color: #4caf50; /* 聚焦时边框变为绿色 */
+  border-color: #c90404; /* 聚焦时边框变为绿色 */
 }
 
 /* 按钮 */
