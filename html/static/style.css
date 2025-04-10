@@ -1,235 +1,387 @@
 * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: "Arial", sans-serif;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: "Arial", sans-serif;
 }
 
 body {
-    text-align: center;
-    background: #c7c7c7;
-    padding: 20px;
+  text-align: center;
+  background: #c7c7c7;
+  padding: 20px;
 }
 
 .container {
-    margin: auto;
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  margin: auto;
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 h2 {
-    color: #333;
-    margin-bottom: 10px;
+  color: #333;
+  margin-bottom: 10px;
 }
 
 /* 添加秘钥输入框的样式 */
 .key-input-container {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 15px;
-    padding: 5px;
-    align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  padding: 5px;
+  align-items: center;
 }
 
 .key-input-container span {
-    font-size: 16px;
-    color: #333;
+  font-size: 16px;
+  color: #333;
 }
 
 .key-input-container input {
-    padding: 5px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    width: 200px;
-    font-size: 14px;
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  width: 200px;
+  font-size: 14px;
 }
 
 .key-input-container button {
-    background: #0288d1;
-    color: white;
-    padding: 8px 12px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+  background: #0288d1;
+  color: white;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
 }
 
 .key-input-container button:hover {
-    background: #0277bd;
+  background: #0277bd;
 }
 
 #file-list {
-    list-style: none;
-    padding: 10px;
-    max-height: 300px;
-    overflow-y: auto;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    background: #fff;
-    text-align: left;
+  list-style: none;
+  padding: 10px;
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background: #fff;
+  text-align: left;
 }
 
 #file-list li {
-    padding: 10px;
-    border-bottom: 1px solid #eee;
-    cursor: pointer;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 #file-list li:hover {
-    background: #f1f1f1;
+  background: #f1f1f1;
 }
 
 .folder-icon-directory {
-    color: #095af1;
+  color: #095af1;
 }
 
 #drop-area {
-    border: 2px dashed #009688;
-    padding: 20px;
-    margin: 15px 0;
-    border-radius: 10px;
-    cursor: pointer;
-    background: #f9f9f9;
-    height: 150px;
-    line-height: 100px;
+  border: 2px dashed #009688;
+  padding: 20px;
+  margin: 15px 0;
+  border-radius: 10px;
+  cursor: pointer;
+  background: #f9f9f9;
+  height: 150px;
+  line-height: 100px;
 }
 
 #drop-area:hover {
-    background: #e0f2f1;
+  background: #e0f2f1;
 }
 
 #clean-btn {
-    background: #ff6a00;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    font-size: 16px;
-    cursor: pointer;
-    display: block;
-    width: 100%;
-    margin-top: 10px;
+  background: #ff6a00;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  display: block;
+  width: 100%;
+  margin-top: 10px;
 }
 
 #clean-btn:hover {
-    background: #ff0000;
+  background: #ff0000;
 }
 
 #upload-list {
-    list-style: none;
-    margin-top: 10px;
+  list-style: none;
+  margin-top: 10px;
 }
 
 #upload-list li {
-    background: #e3f2fd;
-    padding: 8px;
-    margin: 5px 0;
-    border-radius: 5px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  background: #e3f2fd;
+  padding: 8px;
+  margin: 5px 0;
+  border-radius: 5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .delete-btn {
-    background: #e53935;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 12px;
+  background: #e53935;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 12px;
 }
 
 .delete-btn:hover {
-    background: #c62828;
+  background: #c62828;
 }
 
 #upload-btn {
-    background: #4CAF50;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    font-size: 16px;
-    cursor: pointer;
-    display: block;
-    width: 100%;
-    margin-top: 10px;
+  background: #4caf50;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  display: block;
+  width: 100%;
+  margin-top: 10px;
 }
 
 #upload-btn:hover {
-    background: #388e3c;
+  background: #388e3c;
 }
 
 #progress {
-    width: 100%;
-    height: 10px;
-    background: #ddd;
-    border-radius: 5px;
-    margin-top: 10px;
-    display: none;
-    overflow: hidden;
+  width: 100%;
+  height: 10px;
+  background: #ddd;
+  border-radius: 5px;
+  margin-top: 10px;
+  display: none;
+  overflow: hidden;
 }
 
 #progress-bar {
-    height: 100%;
-    width: 0;
-    background: #4caf50;
-    transition: width 0.3s ease;
+  height: 100%;
+  width: 0;
+  background: #4caf50;
+  transition: width 0.3s ease;
 }
 
 .nav-buttons {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
 }
 
 .nav-buttons button {
-    background: #0288d1;
-    color: white;
-    padding: 8px 12px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+  background: #0288d1;
+  color: white;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
 }
 
 .nav-buttons button:hover {
-    background: #0277bd;
+  background: #0277bd;
 }
 
 #current-path {
-    font-size: 16px;
-    color: #555;
+  font-size: 16px;
+  color: #555;
 }
 
 #upload-status {
-    margin-top: 20px;
-    font-size: 18px;
-    color: green;
-    display: none;
+  margin-top: 20px;
+  font-size: 18px;
+  color: green;
+  display: none;
 }
 
 /* 输入框的样式*/
 #secret-key {
-    flex: 1;
-    padding: 0;
-    margin: 0;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    font-size: 14px;
-    width: auto;
+  flex: 1;
+  padding: 0;
+  margin: 0;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 14px;
+  width: auto;
 }
 
 #secret-key input {
-    width: 100%;
-    height: 34px;
-    border-radius: 5px;
-    border: none;
-    padding-left: 10px;
+  width: 100%;
+  height: 34px;
+  border-radius: 5px;
+  border: none;
+  padding-left: 10px;
+}
 
+#file-name {
+  background-color: #555555;
+  border-radius: 5px;
+  padding: 5px;
+  color: #ffffff;
+}
+
+.change-btn {
+  background: #008f0c;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.change-btn:hover {
+  background: #00c023;
+}
+
+/* 添加样式 */
+li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+}
+
+button {
+  padding: 4px 8px;
+  margin: 0;
+}
+
+button.delete-btn {
+  background-color: red;
+  color: white;
+}
+
+button.change-btn {
+  background-color: #4caf50;
+  color: white;
+}
+
+/* 容器的按钮右对齐 */
+button-container {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* 背景遮罩 */
+#rename-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.3); /* 半透明黑色背景 */
+  z-index: 1000; /* 保证弹窗在最上面 */
+  animation: fadeIn 0.3s ease-in; /* 添加动画效果 */
+  display: none; /* 初始隐藏弹窗 */
+}
+
+/* 弹窗容器 */
+#rename-container {
+  width: 100%;
+  max-width: 400px; /* 最大宽度 400px */
+  padding: 20px;
+  background: #ffffff;
+  border-radius: 10px; /* 圆角 */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); /* 阴影效果 */
+  text-align: center;
+  animation: slideUp 0.3s ease-out; /* 弹窗从下往上滑动 */
+}
+
+/* 弹窗标题 */
+#rename-container label {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 10px;
+  display: block;
+}
+
+/* 输入框 */
+#rename-container input {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+  box-sizing: border-box;
+  transition: border-color 0.3s ease;
+}
+
+/* 输入框聚焦时的样式 */
+#rename-container input:focus {
+  outline: none;
+  border-color: #4caf50; /* 聚焦时边框变为绿色 */
+}
+
+/* 按钮 */
+#rename-container button {
+  padding: 10px 15px;
+  margin: 10px 5px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+/* 按钮悬浮效果 */
+#rename-container button:hover {
+  background-color: #45a049;
+}
+
+/* 取消按钮 */
+#rename-container button:last-child {
+  background-color: #f44336; /* 取消按钮为红色 */
+}
+
+#rename-container button:last-child:hover {
+  background-color: #e53935;
+}
+
+/* 弹窗显示的动画效果 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* 弹窗从下往上滑动的动画效果 */
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+  }
+  to {
+    transform: translateY(0);
+  }
 }

@@ -88,6 +88,7 @@ func main() {
 	engin.GET("/read", readFile)             //读取文件
 	engin.POST("/upload", handleUpload)      // 处理文件上传
 	engin.POST("/delete", deleteFile)        //删除文件
+	engin.POST("/change", changName)
 
 	ipv4 := LocalIPV4()
 	fmt.Printf("服务器运行在 htt%s://%s:%d", "p", ipv4, conf.Port)
@@ -276,6 +277,67 @@ func LocalIPV4() string {
 	return localIPv4Str
 }
 
-func readFile(c *gin.Context) {
+func readFile(ctx *gin.Context) {
 
+}
+
+func changName(ctx *gin.Context) {
+	var req struct {
+		Path      string `json:"path"`      // 相对路径
+		Type      string `json:"type"`      // "file" 或 "directory"
+		SecretKey string `json:"secretKey"` // 用户提交的秘钥
+	}
+
+	// 解析 JSON 请求体
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusOK, gin.H{"code": Err9, "info": "请求参数错误"})
+		return
+	}
+
+	// 校验秘钥
+	if req.SecretKey != keySecret {
+		ctx.JSON(http.StatusOK, gin.H{"code": Err10, "info": "秘钥错误"})
+		return
+	}
+
+	// 构建目标路径
+	targetPath := filepath.Join(baseDir, req.Path)
+
+	// 检查目标路径是否在 baseDir 范围内
+	fullPath, err := filepath.Abs(targetPath)
+	if err != nil {
+		ctx.JSON(http.StatusOK, gin.H{"code": Err12, "info": "路径解析失败"})
+		return
+	}
+
+	fmt.Printf("实际的文件路径: %s", fullPath)
+
+	if !strings.HasPrefix(fullPath, fullPathHead) {
+		ctx.JSON(http.StatusOK, gin.H{"code": Err14, "info": "路径超出允许范围"})
+		return
+	}
+
+	// 检查路径是否存在
+	if _, err := os.Stat(targetPath); os.IsNotExist(err) {
+		ctx.JSON(http.StatusOK, gin.H{"code": Err15, "info": "文件或文件夹不存在"})
+		return
+	}
+
+	// 执行修改名称操作
+	if req.Type == "file" {
+		err = os.Remove(targetPath) // 删除文件
+	} else if req.Type == "directory" {
+		err = os.RemoveAll(targetPath) // 删除文件夹
+	} else {
+		ctx.JSON(http.StatusOK, gin.H{"code": Err11, "info": "无效的类型参数"})
+		return
+	}
+
+	if err != nil {
+		ctx.JSON(http.StatusOK, gin.H{"code": Err13, "info": fmt.Sprintf("删除失败: %v", err)})
+		return
+	}
+
+	// 删除成功
+	ctx.JSON(http.StatusOK, gin.H{"code": ErrOK, "info": "删除成功"})
 }
