@@ -22,7 +22,7 @@ const sizeMB int64 = 1024 * 1024
 var maxFileSize int64 = 300
 
 var fullPathHead = ""
-var baseDir = "./uploads" // 上传文件保存的根目录
+var baseDir = "./uploads" // 上传文件保存的根目录,是相对路径 ../../upload
 var keySecret = "这里是验证的秘钥"
 
 type config struct {
@@ -94,7 +94,7 @@ func main() {
 	engin.POST("/change", changName)    //修改文件名称
 
 	ipv4 := LocalIPV4()
-	fmt.Printf("服务器运行在 htt%s://%s:%d", "p", ipv4, conf.Port)
+	fmt.Printf("服务器运行在 htt%s://%s:%d \n", "p", ipv4, conf.Port)
 
 	err = engin.Run(fmt.Sprintf(":%d", conf.Port))
 	if err != nil {
