@@ -9,6 +9,7 @@
 </head>
 
 <body>
+
     <div class="container">
         <h2>📂 kk-file-explorer</h2>
 
@@ -407,6 +408,13 @@
             };
 
             xhr.send(formData);
+        
+            //上传的时候隐藏删除按钮
+            const deleteBtns = document.querySelectorAll("#upload-list .delete-btn");
+            deleteBtns.forEach((btn) => {
+                btn.style.display = "none"; // 隐藏删除按钮
+            });
+
         };
 
         // 页面加载时加载秘钥
