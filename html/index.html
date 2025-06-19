@@ -164,10 +164,40 @@
                 }).catch(err => console.error("删除失败", err));
         }
 
+        //解压文件
+        function  unzipFile(fileName){
+            const secretKey = localStorage.getItem("secretKey");
+            if (!secretKey) {
+                alert("秘钥未填写或无效！");
+                return;
+            }
+
+            if (!confirm(`确定要解压 ${fileName} 吗？`)) return;
+
+            fetch(`/unzip`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    path: currentDir + "/" + fileName,
+                    secretKey: secretKey
+                })
+            }).then(res => res.json())
+                .then(data => {
+                    if (data.code === 0) {
+                        alert("解压成功！");
+                        fetchFiles();
+                    } else {
+                        alert("解压失败: " + data.info);
+                    }
+                }).catch(err => {
+                console.error("解压失败", err);
+                alert("解压请求失败！");
+            });
+        }
+
 
         function fetchFiles() {
-            fetch(`/files?dir=${currentDir}`).then(res => res.json())
-                .then(data => {
+            fetch(`/files?dir=${currentDir}`).then(res => res.json()).then(data => {
                     let fileList = document.getElementById("file-list");
                     fileList.innerHTML = "";
                     if (!data || data.length < 1) {
@@ -218,6 +248,19 @@
                         buttonContainer.style.justifyContent = "flex-end"; // 把按钮放在右边
                         buttonContainer.style.gap = "10px"; // 按钮之间有一点间隔
 
+                        // 仅对 zip 文件添加解压按钮
+                        if (file.type === "file" && file.name.toLowerCase().endsWith(".zip")) {
+                            let unzipBtn = document.createElement("button");
+                            unzipBtn.textContent = "解压";
+                            unzipBtn.style.backgroundColor = "orange";
+                            unzipBtn.style.color = "white";
+                            unzipBtn.style.border = "none";
+                            unzipBtn.style.borderRadius = "5px";
+                            unzipBtn.style.cursor = "pointer";
+                            unzipBtn.onclick = () => unzipFile(file.name);
+                            buttonContainer.appendChild(unzipBtn);
+                        }
+
                         let changeBtn = document.createElement("button");
                         changeBtn.textContent = "修改名称"
                         changeBtn.classList.add("change-btn");
@@ -236,8 +279,7 @@
                         li.appendChild(buttonContainer);
                         fileList.appendChild(li);
                     });
-                }
-                );
+            });
         }
 
         function goUp() {

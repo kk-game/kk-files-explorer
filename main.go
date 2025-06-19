@@ -92,6 +92,7 @@ func main() {
 	engin.POST("/upload", handleUpload) // 处理文件上传
 	engin.POST("/delete", deleteFile)   //删除文件
 	engin.POST("/change", changName)    //修改文件名称
+	engin.POST("/unzip", unzipFile)
 
 	ipv4 := LocalIPV4()
 	fmt.Printf("服务器运行在 htt%s://%s:%d \n", "p", ipv4, conf.Port)
@@ -139,6 +140,7 @@ func listFiles(c *gin.Context) {
 }
 
 // handleUpload 处理文件上传
+
 func handleUpload(c *gin.Context) {
 
 	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxFileSize)
@@ -360,4 +362,41 @@ func changName(ctx *gin.Context) {
 
 	// 重命名成功
 	ctx.JSON(http.StatusOK, gin.H{"code": ErrOK, "info": "重命名成功"})
+}
+
+func unzipFile(ctx *gin.Context) {
+	var req struct {
+		Path      string `json:"path"`      // 相对路径，例如 "games/update.zip"
+		SecretKey string `json:"secretKey"` // 密钥
+	}
+
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusOK, gin.H{"code": Err9, "info": "请求参数错误"})
+		return
+	}
+
+	if req.SecretKey != keySecret {
+		ctx.JSON(http.StatusOK, gin.H{"code": Err10, "info": "秘钥错误"})
+		return
+	}
+
+	zipPath := filepath.Join(baseDir, req.Path)
+	fullZipPath, err := filepath.Abs(zipPath)
+	if err != nil || !strings.HasPrefix(fullZipPath, fullPathHead) {
+		ctx.JSON(http.StatusOK, gin.H{"code": Err12, "info": "路径解析错误或不安全"})
+		return
+	}
+
+	if _, err := os.Stat(zipPath); os.IsNotExist(err) {
+		ctx.JSON(http.StatusOK, gin.H{"code": Err15, "info": "压缩文件不存在"})
+		return
+	}
+
+	destDir := strings.TrimSuffix(zipPath, ".zip")
+	if err := src.Unzip(zipPath, destDir); err != nil {
+		ctx.JSON(http.StatusOK, gin.H{"code": Err13, "info": fmt.Sprintf("解压失败: %v", err)})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"code": ErrOK, "info": "解压成功"})
 }
