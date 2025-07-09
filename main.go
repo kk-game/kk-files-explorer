@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"kk-game-upload/src"
 	"log"
 	"net"
 	"net/http"
@@ -13,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"web_file_explorer/src"
 
 	"github.com/gin-gonic/gin"
 )
@@ -83,16 +83,17 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 	engin := gin.Default()
 	engin.Use(src.Cors())
-	// 设置路由
-	engin.StaticFile("/", "html/index.html") // 返回前端页面
-	engin.Static("/static", "./html/static") //设置静态文件地址
 
-	engin.GET("/files", listFiles)      // 列出目录中的文件
-	engin.GET("/read", readFile)        //读取文件
-	engin.POST("/upload", handleUpload) // 处理文件上传
-	engin.POST("/delete", deleteFile)   //删除文件
-	engin.POST("/change", changName)    //修改文件名称
-	engin.POST("/unzip", unzipFile)
+	engin.StaticFile("/", "html/index.html") // 返回前端页面
+	engin.Static("/static", "./html/static") // 设置静态文件地址
+
+	engin.GET("/files", listFiles)       // 列出目录中的文件
+	engin.GET("/read", readFile)         // 读取文件
+	engin.POST("/upload", handleUpload)  // 处理文件上传
+	engin.POST("/delete", deleteFile)    // 删除文件
+	engin.POST("/change", changName)     // 修改文件名称
+	engin.POST("/unzip", unzipFile)      // 解压
+	engin.GET("/download", src.Download) // 下载
 
 	ipv4 := LocalIPV4()
 	fmt.Printf("服务器运行在 htt%s://%s:%d \n", "p", ipv4, conf.Port)
