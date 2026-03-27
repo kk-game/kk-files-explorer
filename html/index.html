@@ -47,6 +47,7 @@
         <div id="progress">
             <div id="progress-bar"></div>
         </div>
+        <div id="upload-speed" style="font-size:13px; color:#555; margin-top:4px;"></div>
         <div id="upload-status">✅ 上传完成！</div>
 
 
@@ -408,20 +409,51 @@
             }
 
             let formData = new FormData();
+
+            // ✅ 1. 秘钥必须最先
+            formData.append("secretKey", secretKey);
+
+            // ✅ 2. 所有路径其次
+            uploadList.forEach(file => {
+                formData.append("paths", file.fullPath);
+            });
+
+            // ✅ 3. 文件放最后
             uploadList.forEach(file => {
                 formData.append("files", file);
-                formData.append("paths", file.fullPath); // 发送文件的相对路径
             });
-            formData.append("secretKey", secretKey); // 传递秘钥
 
             let xhr = new XMLHttpRequest();
             xhr.open("POST", `/upload?dir=${currentDir}`, true);
 
+            let lastLoaded = 0;
+            let lastTime = Date.now();
+
+            const startTime = Date.now();
+            let totalBytes = 0;
+
             xhr.upload.onprogress = (e) => {
                 if (e.lengthComputable) {
+                    totalBytes = e.total;
+                    const now = Date.now();
+                    const timeDiff = (now - lastTime) / 1000; // 秒
+                    const loadedDiff = e.loaded - lastLoaded;  // 这段时间传了多少字节
+
+                    // 避免除以0
+                    const speed = timeDiff > 0 ? loadedDiff / timeDiff : 0;
+
+                    // 更新进度条
                     let percent = (e.loaded / e.total) * 100;
                     document.getElementById("progress").style.display = "block";
                     document.getElementById("progress-bar").style.width = percent + "%";
+
+                    // 显示速度和剩余时间
+                    const remaining = speed > 0 ? (e.total - e.loaded) / speed : 0;
+                    document.getElementById("upload-speed").textContent =
+                        `${formatSpeed(speed)}  剩余 ${formatTime(remaining)}  ${percent.toFixed(1)}%`;
+
+                    lastLoaded = e.loaded;
+                    lastTime = now;
                 }
             };
 
@@ -442,7 +474,11 @@
                     return
                 }
 
-
+                const totalTime = (Date.now() - startTime) / 1000;
+                const avgSpeed = totalTime > 0 ? totalBytes / totalTime : 0;
+                document.getElementById("upload-speed").textContent =
+                    `✅ 上传完成  平均速度 ${formatSpeed(avgSpeed)}  耗时 ${formatTime(totalTime)}`;
+                
                 document.getElementById("upload-status").style.display = "block";
                 uploadList = [];
                 updateUploadList();
@@ -459,9 +495,26 @@
 
         };
 
+        function formatSpeed(bytesPerSec) {
+            if (bytesPerSec < 1024) return bytesPerSec.toFixed(0) + " B/s";
+            if (bytesPerSec < 1024 * 1024) return (bytesPerSec / 1024).toFixed(1) + " KB/s";
+            return (bytesPerSec / 1024 / 1024).toFixed(2) + " MB/s";
+        }
+
+        function formatTime(seconds) {
+            if (!isFinite(seconds) || seconds <= 0) return "--";
+            if (seconds < 60) return seconds.toFixed(0) + "s";
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return `${m}m${s}s`;
+        }
+
+
         // 页面加载时加载秘钥
         loadSecretKey();
         fetchFiles();
+
+
     </script>
 </body>
 

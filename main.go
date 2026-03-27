@@ -3,7 +3,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
+	"mime/multipart"
 	"net"
 	"net/http"
 	"os"
@@ -143,64 +145,153 @@ func listFiles(c *gin.Context) {
 // handleUpload 处理文件上传
 
 func handleUpload(c *gin.Context) {
-
-	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxFileSize)
+	// 不限制 body 大小（或设置一个很大的上限），让流式处理来控制
+	// 注意：MaxBytesReader 会在超出时中断流，可以保留用于整体请求防护
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxFileSize*10)
 
 	dir := c.Query("dir")
 	currentPath := filepath.Join(baseDir, dir)
 
-	// 确保基本上传目录存在
 	if err := os.MkdirAll(currentPath, os.ModePerm); err != nil {
 		c.JSON(http.StatusOK, gin.H{"code": Err7, "info": "无法创建目录"})
 		return
 	}
 
-	// 获取上传的文件
-	// 获取上传的文件
-	form, err := c.MultipartForm()
+	// 获取 boundary
+	contentType := c.Request.Header.Get("Content-Type")
+	boundary, err := extractBoundary(contentType)
 	if err != nil {
-		if err.Error() == "http: request body too large" {
-			c.JSON(http.StatusOK, gin.H{"code": Err6, "info": "文件大小超过限制"})
-		} else {
-			c.JSON(http.StatusOK, gin.H{"code": Err5, "info": "解析文件失败"})
-		}
+		c.JSON(http.StatusOK, gin.H{"code": Err6, "info": "无法解析 Content-Type"})
 		return
 	}
 
-	files := form.File["files"]
-	paths := form.Value["paths"]
+	// 使用 multipart.Reader 流式读取
+	mr := multipart.NewReader(c.Request.Body, boundary)
 
-	if form.Value["secretKey"][0] != keySecret {
+	var secretKey string
+	var paths []string
+	var fileCount int
+
+	for {
+		part, err := mr.NextPart()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{"code": Err5, "info": "读取数据流失败"})
+			return
+		}
+
+		formName := part.FormName()
+
+		// 处理普通表单字段
+		if part.FileName() == "" {
+			buf, _ := io.ReadAll(part)
+			value := string(buf)
+			switch formName {
+			case "secretKey":
+				secretKey = value
+			case "paths":
+				paths = append(paths, value)
+			}
+			err := part.Close()
+			if err != nil {
+				return
+			}
+			continue
+		}
+
+		// 处理文件字段（流式写入磁盘）
+		if formName == "files" {
+			// 秘钥必须在文件字段之前出现（前端表单字段顺序需保证）
+			if secretKey == "" {
+				// 秘钥还没收到，先缓存文件名但这里我们要求前端把 secretKey 放最前面
+				c.JSON(http.StatusOK, gin.H{"code": Err4, "info": "秘钥必须在文件之前提交"})
+				return
+			}
+			if secretKey != keySecret {
+				c.JSON(http.StatusOK, gin.H{"code": Err4, "info": "秘钥错误"})
+				return
+			}
+
+			if fileCount >= len(paths) {
+				c.JSON(http.StatusOK, gin.H{"code": Err3, "info": "文件数量与路径不匹配"})
+				return
+			}
+
+			relativePath := paths[fileCount]
+			savePath := filepath.Join(currentPath, relativePath)
+
+			// 安全检查：防止路径穿越
+			fullSavePath, err := filepath.Abs(savePath)
+			if err != nil || !strings.HasPrefix(fullSavePath, fullPathHead) {
+				c.JSON(http.StatusOK, gin.H{"code": Err14, "info": "路径不安全"})
+				return
+			}
+
+			if err := os.MkdirAll(filepath.Dir(savePath), os.ModePerm); err != nil {
+				c.JSON(http.StatusOK, gin.H{"code": Err2, "info": "无法创建文件目录"})
+				return
+			}
+
+			// 流式写入：边读网络流边写磁盘
+			if err := streamToFile(part, savePath); err != nil {
+				c.JSON(http.StatusOK, gin.H{"code": Err1, "info": fmt.Sprintf("文件写入失败: %v", err)})
+				return
+			}
+
+			fmt.Println("文件已保存:", savePath)
+			fileCount++
+		}
+
+		_ = part.Close()
+	}
+
+	// 最终校验
+	if secretKey != keySecret {
 		c.JSON(http.StatusOK, gin.H{"code": Err4, "info": "秘钥错误"})
 		return
 	}
 
-	if len(files) == 0 || len(paths) == 0 || len(files) != len(paths) {
-		c.JSON(http.StatusOK, gin.H{"code": Err3, "info": "文件与路径数量不匹配"})
-		return
-	}
-
-	// 处理每个上传的文件
-	for i, fileHeader := range files {
-		relativePath := paths[i]
-		savePath := filepath.Join(currentPath, relativePath)
-
-		// 确保文件的父级目录存在
-		if err := os.MkdirAll(filepath.Dir(savePath), os.ModePerm); err != nil {
-			c.JSON(http.StatusOK, gin.H{"code": Err2, "info": "无法创建文件目录"})
-			return
-		}
-
-		// 保存文件
-		if err := c.SaveUploadedFile(fileHeader, savePath); err != nil {
-			c.JSON(http.StatusOK, gin.H{"code": Err1, "info": "无法保存文件"})
-			return
-		}
-
-		fmt.Println("文件已保存:", savePath)
-	}
-
 	c.JSON(http.StatusOK, gin.H{"code": ErrOK, "info": "上传成功"})
+}
+
+// streamToFile 流式写入，带单文件大小限制
+func streamToFile(src io.Reader, destPath string) error {
+	dst, err := os.Create(destPath)
+	if err != nil {
+		return err
+	}
+	defer func(dst *os.File) {
+		err := dst.Close()
+		if err != nil {
+			return
+		}
+	}(dst)
+
+	// 用 LimitedReader 限制单文件大小
+	limited := &io.LimitedReader{R: src, N: maxFileSize + 1}
+	written, err := io.Copy(dst, limited)
+	if err != nil {
+		_ = os.Remove(destPath) // 写入失败时清理残留文件
+		return err
+	}
+	if written > maxFileSize {
+		_ = os.Remove(destPath)
+		return fmt.Errorf("文件超过大小限制 %dMB", maxFileSize/sizeMB)
+	}
+	return nil
+}
+
+// extractBoundary 从 Content-Type 中提取 boundary
+func extractBoundary(contentType string) (string, error) {
+	for _, part := range strings.Split(contentType, ";") {
+		part = strings.TrimSpace(part)
+		if strings.HasPrefix(part, "boundary=") {
+			return strings.TrimPrefix(part, "boundary="), nil
+		}
+	}
+	return "", fmt.Errorf("未找到 boundary")
 }
 
 func deleteFile(ctx *gin.Context) {
@@ -372,12 +463,12 @@ func unzipFile(ctx *gin.Context) {
 	}
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusOK, gin.H{"code": Err9, "info": "请求参数错误"})
+		ctx.JSON(http.StatusOK, gin.H{"code": Err9, "info": "请求参数错误1"})
 		return
 	}
 
 	if req.SecretKey != keySecret {
-		ctx.JSON(http.StatusOK, gin.H{"code": Err10, "info": "秘钥错误"})
+		ctx.JSON(http.StatusOK, gin.H{"code": Err10, "info": "秘钥错误2"})
 		return
 	}
 
