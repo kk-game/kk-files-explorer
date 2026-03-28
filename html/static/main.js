@@ -496,20 +496,6 @@ function handleDownload() {
     document.body.removeChild(a);
 }
 
-// 复制链接处理
-function handleCopyLink() {
-    if (!contextFile) return;
-    const path = currentDir + "/" + contextFile.name;
-    // 构建完整 URL (根据你的后端路由调整)
-    const fullUrl = window.location.origin + `/download?path=${encodeURIComponent(path)}&secretKey=${localStorage.getItem("secretKey")}`;
-
-    navigator.clipboard.writeText(fullUrl).then(() => {
-        alert("链接已复制到剪贴板！");
-    }).catch(err => {
-        console.error("复制失败", err);
-    });
-}
-
 // 页面加载时加载秘钥
 loadSecretKey();
 fetchFiles();
