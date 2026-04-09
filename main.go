@@ -100,7 +100,7 @@ func main() {
 	ipv4 := LocalIPV4()
 	fmt.Printf("服务器运行在 htt%s://%s:%d \n", "p", ipv4, conf.Port)
 
-	err = engin.Run(fmt.Sprintf(":%d", conf.Port))
+	err = engin.Run(fmt.Sprintf("0.0.0.0:%d", conf.Port))
 	if err != nil {
 		log.Panic("启动服务器错误")
 		return
